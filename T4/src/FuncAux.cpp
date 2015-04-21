@@ -16,3 +16,21 @@ using namespace std;
 using namespace cv;
 
 /* Variables globales */
+
+
+/*
+ * Función mostrarImagen del Trabajo 4 de Visión por computador
+ * Muestra una imagen "imagen" en un marco con titulo "tituloFoto" y
+ * si el booleano espera es true, añade la posibilidad de no avanzar
+ * en el código si no se pulsa una tecla
+ */
+
+void mostrarImagen(String tituloFoto, Mat imagen, bool espera) {
+	namedWindow(tituloFoto, WINDOW_AUTOSIZE);
+	imshow(tituloFoto, imagen);
+	if (espera) {
+		while (waitKey(1) == -1) {
+			//No avanza hasta que el individuo pulse una tecla
+		}
+	}
+}
