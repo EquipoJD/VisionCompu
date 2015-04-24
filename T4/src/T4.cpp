@@ -139,7 +139,7 @@ int main() {
 			for (int i = 0; i < min(des_image.rows - 1, (int) matches.size());
 					i++) //THIS LOOP IS SENSITIVE TO SEGFAULTS
 					{
-				if ((matches[i][0].distance < 0.5 * (matches[i][1].distance))
+				if ((matches[i][0].distance < 0.6 * (matches[i][1].distance))
 						&& ((int) matches[i].size() <= 2
 								&& (int) matches[i].size() > 0)) {
 					good_matches.push_back(matches[i][0]);
