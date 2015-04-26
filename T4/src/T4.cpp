@@ -73,6 +73,7 @@ int main() {
 		waitKey(0);
 
 		//Trozo hardcore
+		/*
 		Mat object = imread("funda.jpg", CV_LOAD_IMAGE_GRAYSCALE);
 
 		if (!object.data) {
@@ -182,7 +183,8 @@ int main() {
 
 			key = waitKey(1);
 		}
-
+		*/
+		testing();
 	}
 	return 0;
 }

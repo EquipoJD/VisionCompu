@@ -8,6 +8,7 @@
 #ifndef FUNCAUX_H_
 #define FUNCAUX_H_
 
+int testing();
 void mostrarImagen(std::string tituloFoto, cv::Mat imagen, bool espera);
 
 #endif /* FUNCAUX_H_ */
