@@ -25,13 +25,29 @@ using namespace cv;
 
 /* Variables globales */
 
+void funcionPrincipal(int tipoCaptura, int detector, int matcher){
+	if(tipoCaptura==0){
+		panoramaDisco(detector, matcher);
+		while(waitKey(1)==-1);
+	}
+	else if(tipoCaptura==1){
+		panoramaPortatilTecla(detector, matcher);
+	}
+	else if(tipoCaptura==2){
+		panoramaPortatilAutomatico(detector, matcher);
+	}
+}
+
 /*
  * Función main del Trabajo 4 de Visión por Computador
  * Gestiona el funcionamiento principal del programa
  */
 
 int main() {
-	panoramaPortatilAutomatico();
+	//0 = panorama con fotos de disco
+	//1 = panorama con fotos hechas con pulsaciones de teclas
+	//2 = panorama con fotos en tiempo real
+	funcionPrincipal(0,0,0);
 	return 0;
 }
 

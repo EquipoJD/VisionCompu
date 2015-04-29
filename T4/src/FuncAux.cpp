@@ -7,7 +7,7 @@
 
 #include <stdio.h>
 #include <iostream>
-
+#include <ctime>
 #include "opencv2/core/core.hpp"
 #include "opencv2/features2d/features2d.hpp"
 #include "opencv2/highgui/highgui.hpp"
@@ -233,62 +233,173 @@ int testingPanorama() {
  * imagen que se va a formar comparando las esquinas 1 y 3 de ambas imágenes
  */
 
-Mat getPanorama(Mat nueva, Mat estatica, bool log) {
-	if (log) {
-		printf("Panorama iniciado\n");
-		fflush(stdout);
-	}
+Mat getPanorama(Mat nueva, Mat estatica, int detectorType, int matcherType,
+		bool log) {
 
-	// Lee la imagen
+	int start_s = clock();
+	int stop_s;
+
 	Mat image1, image2;
 	image1 = nueva.clone();
 	image2 = estatica.clone();
 
-	// Las convierte a escala de grises
+	if (log) {
+		printf("=================\n");
+		printf("Panorama iniciado\n");
+		fflush(stdout);
+	}
+
 	Mat gray_image1;
 	Mat gray_image2;
 	cvtColor(image1, gray_image1, CV_RGB2GRAY);
 	cvtColor(image2, gray_image2, CV_RGB2GRAY);
 
-	if(log) {
+	if (log) {
 		printf("Convertido a escala de grises\n");
 		fflush(stdout);
 	}
-	// Detectar puntos usando SURF
+		// Detectar puntos usando un detector
 	int minHessian = 400;
-
-	SurfFeatureDetector detector(minHessian);
-
 	std::vector<KeyPoint> keypoints_object, keypoints_scene;
+	if (detectorType == 0) {
+		// Surf
+		SurfFeatureDetector detector(minHessian);
+		int startDet = clock();
+		detector.detect(gray_image1, keypoints_object);
+		detector.detect(gray_image2, keypoints_scene);
+		stop_s = clock();
 
-	detector.detect(gray_image1, keypoints_object);
-	detector.detect(gray_image2, keypoints_scene);
+		if (log) {
+			printf("Puntos detectados\n");
+			fflush(stdout);
+			std::cout << "Tiempo transcurrido: "
+					<< (stop_s - startDet) / double(CLOCKS_PER_SEC ) * 1000
+					<< " milisegundos" << std::endl;
+		}
+	} else if (detectorType == 1) {
+		//Sift
+		SiftFeatureDetector detector(minHessian);
+		int startDet = clock();
+		detector.detect(gray_image1, keypoints_object);
+		detector.detect(gray_image2, keypoints_scene);
+		stop_s = clock();
 
-	if(log) {
-		printf("Puntos detectados\n");
-		fflush(stdout);
+		if (log) {
+			printf("Puntos detectados\n");
+			fflush(stdout);
+			std::cout << "Tiempo transcurrido: "
+					<< (stop_s - startDet) / double(CLOCKS_PER_SEC ) * 1000
+					<< " milisegundos" << std::endl;
+		}
+	} else if (detectorType == 2) {
+		//Orb
+		OrbFeatureDetector detector(minHessian);
+		int startDet = clock();
+		detector.detect(gray_image1, keypoints_object);
+		detector.detect(gray_image2, keypoints_scene);
+		stop_s = clock();
+
+		if (log) {
+			printf("Puntos detectados\n");
+			fflush(stdout);
+			std::cout << "Tiempo transcurrido: "
+					<< (stop_s - startDet) / double(CLOCKS_PER_SEC ) * 1000
+					<< " milisegundos" << std::endl;
+		}
+	} else {
+		//Surf otra vez
+		SurfFeatureDetector detector(minHessian);
+		int startDet = clock();
+		detector.detect(gray_image1, keypoints_object);
+		detector.detect(gray_image2, keypoints_scene);
+		stop_s = clock();
+
+		if (log) {
+			printf("Puntos detectados\n");
+			fflush(stdout);
+			std::cout << "Tiempo transcurrido: "
+					<< (stop_s - startDet) / double(CLOCKS_PER_SEC ) * 1000
+					<< " milisegundos" << std::endl;
+		}
 	}
-	// Calcular descriptores
-	SurfDescriptorExtractor extractor;
 
+	// Calcular descriptores
 	Mat descriptors_object, descriptors_scene;
 
-	extractor.compute(gray_image1, keypoints_object, descriptors_object);
-	extractor.compute(gray_image2, keypoints_scene, descriptors_scene);
+	if (detectorType == 0) {
+		SurfDescriptorExtractor extractor;
 
-	if(log) {
-		printf("Descriptores calculados\n");
-		fflush(stdout);
+		int startCalc = clock();
+		extractor.compute(gray_image1, keypoints_object, descriptors_object);
+		extractor.compute(gray_image2, keypoints_scene, descriptors_scene);
+		stop_s = clock();
+
+		if (log) {
+			printf("Descriptores calculados\n");
+			fflush(stdout);
+			std::cout << "Tiempo transcurrido: "
+					<< (stop_s - startCalc) / double(CLOCKS_PER_SEC ) * 1000
+					<< " milisegundos" << std::endl;
+		}
+	} else if (detectorType == 1) {
+		SiftDescriptorExtractor extractor;
+
+		int startCalc = clock();
+		extractor.compute(gray_image1, keypoints_object, descriptors_object);
+		extractor.compute(gray_image2, keypoints_scene, descriptors_scene);
+		stop_s = clock();
+
+		if (log) {
+			printf("Descriptores calculados\n");
+			fflush(stdout);
+			std::cout << "Tiempo transcurrido: "
+					<< (stop_s - startCalc) / double(CLOCKS_PER_SEC ) * 1000
+					<< " milisegundos" << std::endl;
+		}
+	} else if (detectorType == 2) {
+		OrbDescriptorExtractor extractor;
+
+		int startCalc = clock();
+		extractor.compute(gray_image1, keypoints_object, descriptors_object);
+		extractor.compute(gray_image2, keypoints_scene, descriptors_scene);
+		stop_s = clock();
+
+		if (log) {
+			printf("Descriptores calculados\n");
+			fflush(stdout);
+			std::cout << "Tiempo transcurrido: "
+					<< (stop_s - startCalc) / double(CLOCKS_PER_SEC ) * 1000
+					<< " milisegundos" << std::endl;
+		}
+	} else {
+		SurfDescriptorExtractor extractor;
+
+		int startCalc = clock();
+		extractor.compute(gray_image1, keypoints_object, descriptors_object);
+		extractor.compute(gray_image2, keypoints_scene, descriptors_scene);
+		stop_s = clock();
+
+		if (log) {
+			printf("Descriptores calculados\n");
+			fflush(stdout);
+			std::cout << "Tiempo transcurrido: "
+					<< (stop_s - startCalc) / double(CLOCKS_PER_SEC ) * 1000
+					<< " milisegundos" << std::endl;
+		}
 	}
 	// Buscar matches con fuerza bruta
-	//FlannBasedMatcher matcher;
 	BFMatcher matcher(NORM_L2);
 	std::vector<vector<DMatch> > matches;
+	int startMatch = clock();
 	matcher.knnMatch(descriptors_object, descriptors_scene, matches, 2);
+	stop_s = clock();
 
-	if(log) {
+	if (log) {
 		printf("Matches encontrados\n");
 		fflush(stdout);
+		std::cout << "Tiempo transcurrido: "
+				<< (stop_s - startMatch) / double(CLOCKS_PER_SEC ) * 1000
+				<< " milisegundos" << std::endl;
 	}
 	//-- Draw matches
 	Mat img_matches;
@@ -306,13 +417,17 @@ Mat getPanorama(Mat nueva, Mat estatica, bool log) {
 			good_matches.push_back(matches[i][0]);
 		}
 	}
-	if(log) {
+
+	if (log) {
 		printf("Matches buenos encontrados\n");
 		fflush(stdout);
 	}
-	// Si no hay por lo menos 15 matches buenas, no haremos nada
+
+		// Si no hay por lo menos 15 matches buenas,
+		// no haremos nada
+
 	if (good_matches.size() >= 15) {
-		if(log) {
+		if (log) {
 			printf("Al menos 15 matches buenos\n");
 			fflush(stdout);
 		}
@@ -320,41 +435,48 @@ Mat getPanorama(Mat nueva, Mat estatica, bool log) {
 		std::vector<Point2f> scene;
 
 		for (unsigned int i = 0; i < good_matches.size(); i++) {
-			// Conseguir los puntos de interés de las matches buenas
 			obj.push_back(keypoints_object[good_matches[i].queryIdx].pt);
 			scene.push_back(keypoints_scene[good_matches[i].trainIdx].pt);
 		}
+
 		if(log) {
 			printf("Puntos obtenidos para los buenos matches\n");
 			fflush(stdout);
 		}
-		// Encontrar la matriz de Homografía
+
 		Mat good_inliers;
 
+		int startHom=clock();
 		Mat H = findHomography(obj, scene, CV_RANSAC, 3, good_inliers);
+		stop_s=clock();
+
 		if(log) {
 			printf("Homografía encontrada\n");
 			fflush(stdout);
+			std::cout << "Tiempo transcurrido: "
+			<< (stop_s - startHom) / double(CLOCKS_PER_SEC ) * 1000
+			<< " milisegundos"
+			<< std::endl;
 		}
+
 		vector<DMatch> drawResults;
 		for (int i = 0; i < good_inliers.rows; i++) {
 			if (good_inliers.at<int>(i,0) == 1) {
 				drawResults.push_back(good_matches[i]);
 			}
 		}
+
 		if(log) {
 			printf("Buenos inliers obtenidos\n");
 			fflush(stdout);
 		}
-		//-- Draw matches
+
 		Mat img_matches2;
 		drawMatches(image1, keypoints_object, image2, keypoints_scene,
 				drawResults, img_matches2);
 
-		//-- Show detected matches
 		imshow("Matches", img_matches2);
 
-		//Esquinas de las fotos para calcular la nueva matriz de Homografía
 		vector<Point2f> im1, im2, im1c, im2c, im1f, im2f;
 		im1.push_back(Point(0, 0));
 		im1.push_back(Point(image1.cols, 0));
@@ -366,22 +488,19 @@ Mat getPanorama(Mat nueva, Mat estatica, bool log) {
 		im2.push_back(Point(0, image2.rows));
 		im2.push_back(Point(image2.cols, image2.rows));
 
-		// Obtener las nuevas esquinas aplicando Homografía
 		perspectiveTransform(im1, im1c, H);
 		perspectiveTransform(im2, im2c, H);
 
-		// Obtener la corrección para X e Y con las esquinas homografiadas
 		double correccionX = calcularCorreccionX(im1c, im2c);
 		double correccionY = calcularCorreccionY(im1c, im2c);
 		if(log) {
 			if(correccionX==0 && correccionY==0)
-				printf("Correccion calculada\n");
+			printf("Correccion calculada\n");
 			else
-				printf("No ha sido necesaria correccion\n");
+			printf("No ha sido necesaria correccion\n");
 			fflush(stdout);
 		}
-		// Obtener la matriz de homografía de traslación para aplicar
-		// la corrección
+
 		Mat newH = Mat::eye(3, 3, H.type());
 		newH.at<double>(0, 2) = correccionX;
 		newH.at<double>(1, 2) = correccionY;
@@ -389,11 +508,10 @@ Mat getPanorama(Mat nueva, Mat estatica, bool log) {
 			printf("Matriz de traslacion calculada\n");
 			fflush(stdout);
 		}
-		// Obtener las esquinas definitivas aplicando la nueva homografía
+
 		perspectiveTransform(im1, im1f, newH * H);
 		perspectiveTransform(im2, im2f, newH);
 
-		// Usar ambas matrices de homografía para trasladar las imágenes
 		Mat final;
 		warpPerspective(image2, final, newH,
 				cv::Size(calcularAnchura(im1f, im2f),
@@ -403,11 +521,17 @@ Mat getPanorama(Mat nueva, Mat estatica, bool log) {
 				cv::Size(calcularAnchura(im1f, im2f),
 						calcularAltura(im1f, im2f)), INTER_LINEAR,
 				BORDER_TRANSPARENT, 0);
+		stop_s=clock();
+
 		if(log) {
 			printf("Panorama calculado\n");
 			fflush(stdout);
+			std::cout << "Tiempo transcurrido total: "
+			<< (stop_s - start_s) / double(CLOCKS_PER_SEC ) * 1000
+			<< " milisegundos"
+			<< std::endl;
 		}
-		//Devuelve el panorama
+
 		return final;
 	} else {
 		if(log) {
@@ -416,16 +540,39 @@ Mat getPanorama(Mat nueva, Mat estatica, bool log) {
 		}
 		return estatica;
 	}
+		}
+
+		/*
+		 * Función panoramaPortatilAutomatico del trabajo 4 de Visión por computador
+		 * Crea un panorama automáticamente con las fotos capturadas por la cámara del portátil
+		 */
+
+void panoramaDisco(int detector, int matcher) {
+	Mat image1, image2, image3, image4, image5, image6;
+	image1 = imread("1.jpg", CV_LOAD_IMAGE_COLOR);
+	image2 = imread("2.jpg", CV_LOAD_IMAGE_COLOR);
+	image3 = imread("3.jpg", CV_LOAD_IMAGE_COLOR);
+	image4 = imread("4.jpg", CV_LOAD_IMAGE_COLOR);
+	image5 = imread("5.jpg", CV_LOAD_IMAGE_COLOR);
+	image6 = imread("6.jpg", CV_LOAD_IMAGE_COLOR);
+
+	Mat frame1 = getPanorama(image1, image2, true, detector, matcher);
+	Mat frame2 = getPanorama(image3, frame1, true, detector, matcher);
+	Mat frame3 = getPanorama(image4, frame2, true, detector, matcher);
+	Mat frame4 = getPanorama(image5, frame3, true, detector, matcher);
+	Mat frame5 = getPanorama(image6, frame4, true, detector, matcher);
+	mostrarImagen("Panorama", frame5, false);
+	imwrite("fotito.jpg", frame5);
 }
 
 /*
-* Función panoramaPortatilTecla del trabajo 4 de Visión por computador
-* Con cada pulsación del teclado, toma una nueva foto para añadir al panorama
-* si se puede formar uno con la nueva foto tomada
-*/
+ * Función panoramaPortatilTecla del trabajo 4 de Visión por computador
+ * Con cada pulsación del teclado, toma una nueva foto para añadir al panorama
+ * si se puede formar uno con la nueva foto tomada
+ */
 
-void panoramaPortatilTecla() {
-	VideoCapture cap(1);
+void panoramaPortatilTecla(int detector, int matcher) {
+	VideoCapture cap(0);
 	Mat frame;
 
 	while (waitKey(1) == -1) {
@@ -444,7 +591,7 @@ void panoramaPortatilTecla() {
 
 		Mat imagen2 = frame.clone();
 
-		imagen1 = getPanorama(imagen2, imagen1, true).clone();
+		imagen1 = getPanorama(imagen2, imagen1, true, detector, matcher).clone();
 		mostrarImagen("Panorama", imagen1, false);
 		imwrite("fotito.jpg", imagen1);
 	}
@@ -452,11 +599,11 @@ void panoramaPortatilTecla() {
 
 /*
  * Función panoramaPortatilAutomatico del trabajo 4 de Visión por computador
- * No funciona de momento
+ * Crea un panorama automáticamente con las fotos capturadas por la cámara del portátil
  */
 
-void panoramaPortatilAutomatico() {
-	VideoCapture cap(1);
+void panoramaPortatilAutomatico(int detector, int matcher) {
+	VideoCapture cap(0);
 	Mat frame1, frame2;
 
 	cap >> frame1;
@@ -466,7 +613,7 @@ void panoramaPortatilAutomatico() {
 
 		mostrarImagen("Camara", frame2, false);
 
-		frame1 = getPanorama(frame2, frame1, true).clone();
+		frame1 = getPanorama(frame2, frame1, true,detector, matcher).clone();
 
 		mostrarImagen("Panorama", frame1, false);
 		imwrite("fotito.jpg", frame1);
