@@ -25,9 +25,13 @@ using namespace cv;
 
 /* Variables globales */
 
-void funcionPrincipal(int tipoCaptura, int detector, int matcher){
+void funcionPrincipal(int tipoCaptura, int detector, int matcher, int tipo){
+	if(detector==2 and matcher==1){
+		//Orb no puede ir con Flann
+		matcher=0;
+	}
 	if(tipoCaptura==0){
-		panoramaDisco(detector, matcher);
+		panoramaDisco(detector, matcher,tipo);
 		while(waitKey(1)==-1);
 	}
 	else if(tipoCaptura==1){
@@ -47,7 +51,22 @@ int main() {
 	//0 = panorama con fotos de disco
 	//1 = panorama con fotos hechas con pulsaciones de teclas
 	//2 = panorama con fotos en tiempo real
-	funcionPrincipal(0,0,0);
+	int tipoPanorama = 0;
+
+	//0 = SURF
+	//1 = SIFT
+	//2 = ORB
+	int tipoDetector = 1;
+
+	//0 = Brute force
+	//1 = Flann Based
+	int tipoMatcher = 1;
+
+	//0 = objeto
+	//1 = escena
+	int objEsc = 1;
+
+	funcionPrincipal(tipoPanorama,tipoDetector,tipoMatcher,objEsc);
 	return 0;
 }
 

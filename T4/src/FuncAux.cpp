@@ -226,6 +226,204 @@ int testingPanorama() {
 	return 0;
 }
 
+std::vector<DMatch> getGoodMatches(int matcherType, int detectorType,
+		vector<KeyPoint> keypoints_object, vector<KeyPoint> keypoints_scene,
+		Mat descriptors_object, Mat descriptors_scene, Mat image1, Mat image2,
+		bool log) {
+
+	std::vector<DMatch> good_matches;
+
+	if (matcherType == 1) {
+		FlannBasedMatcher matcher;
+		std::vector<DMatch> matches;
+		int startMatch = clock();
+		matcher.match(descriptors_object, descriptors_scene, matches);
+		int stop_s = clock();
+
+		if (log) {
+			printf("Matches encontrados\n");
+			fflush(stdout);
+			std::cout << "Tiempo transcurrido: "
+					<< (stop_s - startMatch) / double(CLOCKS_PER_SEC ) * 1000
+					<< " milisegundos" << std::endl;
+		}
+		//-- Draw matches
+		Mat img_matches;
+		drawMatches(image1, keypoints_object, image2, keypoints_scene, matches,
+				img_matches);
+
+		//-- Show detected matches
+		imshow("Todas las correspondencias", img_matches);
+
+		// Sacar las matches buenas
+
+		good_matches = matches;
+
+		if (log) {
+			printf("Matches buenos encontrados\n");
+			fflush(stdout);
+		}
+	} else {
+		std::vector<vector<DMatch> > matches;
+		int startMatch, stop_s;
+		if(detectorType!=2) {
+			BFMatcher matcher(NORM_L2);
+			startMatch = clock();
+			matcher.knnMatch(descriptors_object, descriptors_scene, matches, 2);
+			stop_s = clock();
+		}
+		else {
+			BFMatcher matcher(NORM_HAMMING);
+			startMatch = clock();
+			matcher.knnMatch(descriptors_object, descriptors_scene, matches, 2);
+			stop_s = clock();
+		}
+
+		if (log) {
+			printf("Matches encontrados\n");
+			fflush(stdout);
+			std::cout << "Tiempo transcurrido: "
+			<< (stop_s - startMatch) / double(CLOCKS_PER_SEC ) * 1000
+			<< " milisegundos" << std::endl;
+		}
+
+		Mat img_matches;
+		drawMatches(image1, keypoints_object, image2, keypoints_scene, matches,
+				img_matches);
+		imshow("Todas las correspondencias", img_matches);
+
+		for (int i = 0; i < descriptors_object.rows; i++) {
+			if (matches[i][0].distance < 0.5 * matches[i][1].distance) {
+				good_matches.push_back(matches[i][0]);
+			}
+		}
+
+		if (log) {
+			printf("Matches buenos encontrados\n");
+			fflush(stdout);
+		}
+	}
+	return good_matches;
+}
+
+std::vector<Mat> getDescriptors(int detectorType, Mat gray_image1,
+		Mat gray_image2, vector<KeyPoint> keypoints_object,
+		vector<KeyPoint> keypoints_scene, bool log) {
+	vector<Mat> returned;
+	Mat descriptors_object, descriptors_scene;
+	if (detectorType == 1) {
+		SiftDescriptorExtractor extractor;
+
+		int startCalc = clock();
+		extractor.compute(gray_image1, keypoints_object, descriptors_object);
+		extractor.compute(gray_image2, keypoints_scene, descriptors_scene);
+		int stop_s = clock();
+
+		if (log) {
+			printf("Descriptores calculados\n");
+			fflush(stdout);
+			std::cout << "Tiempo transcurrido: "
+					<< (stop_s - startCalc) / double(CLOCKS_PER_SEC ) * 1000
+					<< " milisegundos" << std::endl;
+		}
+	} else if (detectorType == 2) {
+		OrbDescriptorExtractor extractor;
+
+		int startCalc = clock();
+		extractor.compute(gray_image1, keypoints_object, descriptors_object);
+		extractor.compute(gray_image2, keypoints_scene, descriptors_scene);
+		int stop_s = clock();
+
+		if (log) {
+			printf("Descriptores calculados\n");
+			fflush(stdout);
+			std::cout << "Tiempo transcurrido: "
+					<< (stop_s - startCalc) / double(CLOCKS_PER_SEC ) * 1000
+					<< " milisegundos" << std::endl;
+		}
+	} else {
+		SurfDescriptorExtractor extractor;
+
+		int startCalc = clock();
+		extractor.compute(gray_image1, keypoints_object, descriptors_object);
+		extractor.compute(gray_image2, keypoints_scene, descriptors_scene);
+		int stop_s = clock();
+
+		if (log) {
+			printf("Descriptores calculados\n");
+			fflush(stdout);
+			std::cout << "Tiempo transcurrido: "
+					<< (stop_s - startCalc) / double(CLOCKS_PER_SEC ) * 1000
+					<< " milisegundos" << std::endl;
+		}
+	}
+	returned.push_back(descriptors_object);
+	returned.push_back(descriptors_scene);
+	return returned;
+}
+
+std::vector<vector<KeyPoint> > getKeyPoints(Mat gray_image1, Mat gray_image2,
+		int detectorType, bool log) {
+	std::vector<vector<KeyPoint> > returned;
+
+	// Detectar puntos usando un detector
+	int minHessian = 400;
+	std::vector<KeyPoint> keypoints_object, keypoints_scene;
+	if (detectorType == 1) {
+		//Sift
+		SiftFeatureDetector detector(minHessian);
+		int startDet = clock();
+		detector.detect(gray_image1, keypoints_object);
+		detector.detect(gray_image2, keypoints_scene);
+		int stop_s = clock();
+
+		if (log) {
+			printf("Puntos detectados\n");
+			fflush(stdout);
+			std::cout << "Tiempo transcurrido: "
+					<< (stop_s - startDet) / double(CLOCKS_PER_SEC ) * 1000
+					<< " milisegundos" << std::endl;
+		}
+
+		returned.push_back(keypoints_object);
+		returned.push_back(keypoints_scene);
+	} else if (detectorType == 2) {
+		//Orb
+		OrbFeatureDetector detector(minHessian);
+		int startDet = clock();
+		detector.detect(gray_image1, keypoints_object);
+		detector.detect(gray_image2, keypoints_scene);
+		int stop_s = clock();
+
+		if (log) {
+			printf("Puntos detectados\n");
+			fflush(stdout);
+			std::cout << "Tiempo transcurrido: "
+					<< (stop_s - startDet) / double(CLOCKS_PER_SEC ) * 1000
+					<< " milisegundos" << std::endl;
+		}
+		returned.push_back(keypoints_object);
+		returned.push_back(keypoints_scene);
+	} else {
+		//Surf otra vez
+		SurfFeatureDetector detector(minHessian);
+		int startDet = clock();
+		detector.detect(gray_image1, keypoints_object);
+		detector.detect(gray_image2, keypoints_scene);
+		int stop_s = clock();
+
+		if (log) {
+			printf("Puntos detectados\n");
+			fflush(stdout);
+			std::cout << "Tiempo transcurrido: "
+					<< (stop_s - startDet) / double(CLOCKS_PER_SEC ) * 1000
+					<< " milisegundos" << std::endl;
+		}
+		returned.push_back(keypoints_object);
+		returned.push_back(keypoints_scene);
+	}
+	return returned;
+}
 /*
  * Función  del trabajo 4 de Visión por computador
  * En base a unos vectores de puntos que representan las esquinas de las dos
@@ -233,8 +431,8 @@ int testingPanorama() {
  * imagen que se va a formar comparando las esquinas 1 y 3 de ambas imágenes
  */
 
-Mat getPanorama(Mat nueva, Mat estatica, int detectorType, int matcherType,
-		bool log) {
+Mat getPanorama(Mat nueva, Mat estatica, bool log, int detectorType,
+		int matcherType) {
 
 	int start_s = clock();
 	int stop_s;
@@ -258,177 +456,40 @@ Mat getPanorama(Mat nueva, Mat estatica, int detectorType, int matcherType,
 		printf("Convertido a escala de grises\n");
 		fflush(stdout);
 	}
-		// Detectar puntos usando un detector
-	int minHessian = 400;
-	std::vector<KeyPoint> keypoints_object, keypoints_scene;
-	if (detectorType == 0) {
-		// Surf
-		SurfFeatureDetector detector(minHessian);
-		int startDet = clock();
-		detector.detect(gray_image1, keypoints_object);
-		detector.detect(gray_image2, keypoints_scene);
-		stop_s = clock();
 
-		if (log) {
-			printf("Puntos detectados\n");
-			fflush(stdout);
-			std::cout << "Tiempo transcurrido: "
-					<< (stop_s - startDet) / double(CLOCKS_PER_SEC ) * 1000
-					<< " milisegundos" << std::endl;
-		}
-	} else if (detectorType == 1) {
-		//Sift
-		SiftFeatureDetector detector(minHessian);
-		int startDet = clock();
-		detector.detect(gray_image1, keypoints_object);
-		detector.detect(gray_image2, keypoints_scene);
-		stop_s = clock();
-
-		if (log) {
-			printf("Puntos detectados\n");
-			fflush(stdout);
-			std::cout << "Tiempo transcurrido: "
-					<< (stop_s - startDet) / double(CLOCKS_PER_SEC ) * 1000
-					<< " milisegundos" << std::endl;
-		}
-	} else if (detectorType == 2) {
-		//Orb
-		OrbFeatureDetector detector(minHessian);
-		int startDet = clock();
-		detector.detect(gray_image1, keypoints_object);
-		detector.detect(gray_image2, keypoints_scene);
-		stop_s = clock();
-
-		if (log) {
-			printf("Puntos detectados\n");
-			fflush(stdout);
-			std::cout << "Tiempo transcurrido: "
-					<< (stop_s - startDet) / double(CLOCKS_PER_SEC ) * 1000
-					<< " milisegundos" << std::endl;
-		}
-	} else {
-		//Surf otra vez
-		SurfFeatureDetector detector(minHessian);
-		int startDet = clock();
-		detector.detect(gray_image1, keypoints_object);
-		detector.detect(gray_image2, keypoints_scene);
-		stop_s = clock();
-
-		if (log) {
-			printf("Puntos detectados\n");
-			fflush(stdout);
-			std::cout << "Tiempo transcurrido: "
-					<< (stop_s - startDet) / double(CLOCKS_PER_SEC ) * 1000
-					<< " milisegundos" << std::endl;
-		}
-	}
+		// Calcular puntos de interés
+	std::vector<vector<KeyPoint> > keypoints;
+	keypoints = getKeyPoints(gray_image1, gray_image2, detectorType, log);
+	vector<KeyPoint> keypoints_object = keypoints[0];
+	vector<KeyPoint> keypoints_scene = keypoints[1];
 
 	// Calcular descriptores
 	Mat descriptors_object, descriptors_scene;
+	vector<Mat> descriptors;
+	descriptors = getDescriptors(detectorType, gray_image1, gray_image2,
+			keypoints_object, keypoints_scene, log);
 
-	if (detectorType == 0) {
-		SurfDescriptorExtractor extractor;
+	descriptors_object = descriptors[0];
+	descriptors_scene = descriptors[1];
 
-		int startCalc = clock();
-		extractor.compute(gray_image1, keypoints_object, descriptors_object);
-		extractor.compute(gray_image2, keypoints_scene, descriptors_scene);
-		stop_s = clock();
+	// Buscar matches y sacar las matches buenas
+	std::vector<DMatch> good_matches = getGoodMatches(matcherType, detectorType,
+			keypoints_object, keypoints_scene, descriptors_object,
+			descriptors_scene, image1, image2, log);
 
-		if (log) {
-			printf("Descriptores calculados\n");
-			fflush(stdout);
-			std::cout << "Tiempo transcurrido: "
-					<< (stop_s - startCalc) / double(CLOCKS_PER_SEC ) * 1000
-					<< " milisegundos" << std::endl;
-		}
-	} else if (detectorType == 1) {
-		SiftDescriptorExtractor extractor;
+	// Si no hay por lo menos 15 matches buenas,
+	// no haremos nada
 
-		int startCalc = clock();
-		extractor.compute(gray_image1, keypoints_object, descriptors_object);
-		extractor.compute(gray_image2, keypoints_scene, descriptors_scene);
-		stop_s = clock();
-
-		if (log) {
-			printf("Descriptores calculados\n");
-			fflush(stdout);
-			std::cout << "Tiempo transcurrido: "
-					<< (stop_s - startCalc) / double(CLOCKS_PER_SEC ) * 1000
-					<< " milisegundos" << std::endl;
-		}
-	} else if (detectorType == 2) {
-		OrbDescriptorExtractor extractor;
-
-		int startCalc = clock();
-		extractor.compute(gray_image1, keypoints_object, descriptors_object);
-		extractor.compute(gray_image2, keypoints_scene, descriptors_scene);
-		stop_s = clock();
-
-		if (log) {
-			printf("Descriptores calculados\n");
-			fflush(stdout);
-			std::cout << "Tiempo transcurrido: "
-					<< (stop_s - startCalc) / double(CLOCKS_PER_SEC ) * 1000
-					<< " milisegundos" << std::endl;
-		}
-	} else {
-		SurfDescriptorExtractor extractor;
-
-		int startCalc = clock();
-		extractor.compute(gray_image1, keypoints_object, descriptors_object);
-		extractor.compute(gray_image2, keypoints_scene, descriptors_scene);
-		stop_s = clock();
-
-		if (log) {
-			printf("Descriptores calculados\n");
-			fflush(stdout);
-			std::cout << "Tiempo transcurrido: "
-					<< (stop_s - startCalc) / double(CLOCKS_PER_SEC ) * 1000
-					<< " milisegundos" << std::endl;
-		}
+	unsigned int goodMatchesSize;
+	if(detectorType==2){
+		goodMatchesSize = 10;
 	}
-	// Buscar matches con fuerza bruta
-	BFMatcher matcher(NORM_L2);
-	std::vector<vector<DMatch> > matches;
-	int startMatch = clock();
-	matcher.knnMatch(descriptors_object, descriptors_scene, matches, 2);
-	stop_s = clock();
-
-	if (log) {
-		printf("Matches encontrados\n");
-		fflush(stdout);
-		std::cout << "Tiempo transcurrido: "
-				<< (stop_s - startMatch) / double(CLOCKS_PER_SEC ) * 1000
-				<< " milisegundos" << std::endl;
+	else{
+		goodMatchesSize = 15;
 	}
-	//-- Draw matches
-	Mat img_matches;
-	drawMatches(image1, keypoints_object, image2, keypoints_scene, matches,
-			img_matches);
-
-	//-- Show detected matches
-	imshow("Matches1", img_matches);
-
-	// Sacar las matches buenas
-	std::vector<DMatch> good_matches;
-
-	for (int i = 0; i < descriptors_object.rows; i++) {
-		if (matches[i][0].distance < 0.5 * matches[i][1].distance) {
-			good_matches.push_back(matches[i][0]);
-		}
-	}
-
-	if (log) {
-		printf("Matches buenos encontrados\n");
-		fflush(stdout);
-	}
-
-		// Si no hay por lo menos 15 matches buenas,
-		// no haremos nada
-
-	if (good_matches.size() >= 15) {
+	if (good_matches.size() >= goodMatchesSize) {
 		if (log) {
-			printf("Al menos 15 matches buenos\n");
+			printf("Al menos %d matches buenos\n",goodMatchesSize);
 			fflush(stdout);
 		}
 		std::vector<Point2f> obj;
@@ -445,7 +506,6 @@ Mat getPanorama(Mat nueva, Mat estatica, int detectorType, int matcherType,
 		}
 
 		Mat good_inliers;
-
 		int startHom=clock();
 		Mat H = findHomography(obj, scene, CV_RANSAC, 3, good_inliers);
 		stop_s=clock();
@@ -458,10 +518,9 @@ Mat getPanorama(Mat nueva, Mat estatica, int detectorType, int matcherType,
 			<< " milisegundos"
 			<< std::endl;
 		}
-
 		vector<DMatch> drawResults;
 		for (int i = 0; i < good_inliers.rows; i++) {
-			if (good_inliers.at<int>(i,0) == 1) {
+			if (good_inliers.at<uchar>(i,0) == 1) {
 				drawResults.push_back(good_matches[i]);
 			}
 		}
@@ -475,7 +534,7 @@ Mat getPanorama(Mat nueva, Mat estatica, int detectorType, int matcherType,
 		drawMatches(image1, keypoints_object, image2, keypoints_scene,
 				drawResults, img_matches2);
 
-		imshow("Matches", img_matches2);
+		imshow("Buenas correspondencias", img_matches2);
 
 		vector<Point2f> im1, im2, im1c, im2c, im1f, im2f;
 		im1.push_back(Point(0, 0));
@@ -494,7 +553,7 @@ Mat getPanorama(Mat nueva, Mat estatica, int detectorType, int matcherType,
 		double correccionX = calcularCorreccionX(im1c, im2c);
 		double correccionY = calcularCorreccionY(im1c, im2c);
 		if(log) {
-			if(correccionX==0 && correccionY==0)
+			if(correccionX!=0 or correccionY!=0)
 			printf("Correccion calculada\n");
 			else
 			printf("No ha sido necesaria correccion\n");
@@ -504,6 +563,7 @@ Mat getPanorama(Mat nueva, Mat estatica, int detectorType, int matcherType,
 		Mat newH = Mat::eye(3, 3, H.type());
 		newH.at<double>(0, 2) = correccionX;
 		newH.at<double>(1, 2) = correccionY;
+
 		if(log) {
 			printf("Matriz de traslacion calculada\n");
 			fflush(stdout);
@@ -535,34 +595,76 @@ Mat getPanorama(Mat nueva, Mat estatica, int detectorType, int matcherType,
 		return final;
 	} else {
 		if(log) {
-			printf("No se han encontrado al menos 15 puntos buenos, panorama cancelado\n");
+			printf("No se han encontrado al menos %d puntos buenos, panorama cancelado\n"
+					,goodMatchesSize);
 			fflush(stdout);
 		}
-		return estatica;
-	}
+		std::vector<Point2f> obj;
+		std::vector<Point2f> scene;
+
+		for (unsigned int i = 0; i < good_matches.size(); i++) {
+			obj.push_back(keypoints_object[good_matches[i].queryIdx].pt);
+			scene.push_back(keypoints_scene[good_matches[i].trainIdx].pt);
 		}
 
-		/*
-		 * Función panoramaPortatilAutomatico del trabajo 4 de Visión por computador
-		 * Crea un panorama automáticamente con las fotos capturadas por la cámara del portátil
-		 */
+		Mat good_inliers;
+		Mat H = findHomography(obj, scene, CV_RANSAC, 3, good_inliers);
 
-void panoramaDisco(int detector, int matcher) {
-	Mat image1, image2, image3, image4, image5, image6;
-	image1 = imread("1.jpg", CV_LOAD_IMAGE_COLOR);
-	image2 = imread("2.jpg", CV_LOAD_IMAGE_COLOR);
-	image3 = imread("3.jpg", CV_LOAD_IMAGE_COLOR);
-	image4 = imread("4.jpg", CV_LOAD_IMAGE_COLOR);
-	image5 = imread("5.jpg", CV_LOAD_IMAGE_COLOR);
-	image6 = imread("6.jpg", CV_LOAD_IMAGE_COLOR);
+		vector<DMatch> drawResults;
+		for (int i = 0; i < good_inliers.rows; i++) {
+			if (good_inliers.at<uchar>(i,0) == 1) {
+				drawResults.push_back(good_matches[i]);
+			}
+		}
 
-	Mat frame1 = getPanorama(image1, image2, true, detector, matcher);
-	Mat frame2 = getPanorama(image3, frame1, true, detector, matcher);
-	Mat frame3 = getPanorama(image4, frame2, true, detector, matcher);
-	Mat frame4 = getPanorama(image5, frame3, true, detector, matcher);
-	Mat frame5 = getPanorama(image6, frame4, true, detector, matcher);
-	mostrarImagen("Panorama", frame5, false);
-	imwrite("fotito.jpg", frame5);
+		Mat img_matches2;
+		drawMatches(image1, keypoints_object, image2, keypoints_scene,
+				drawResults, img_matches2);
+
+		imshow("Buenas correspondencias", img_matches2);
+		return estatica;
+	}
+
+}
+
+/*
+ * Función panoramaPortatilAutomatico del trabajo 4 de Visión por computador
+ * Crea un panorama automáticamente con las fotos capturadas por la cámara del portátil
+ */
+
+void panoramaDisco(int detector, int matcher, int tipo) {
+	if(tipo==1){
+		Mat image1, image2, image3;
+		image1 = imread("ext1.jpg", CV_LOAD_IMAGE_COLOR);
+		image2 = imread("ext2.jpg", CV_LOAD_IMAGE_COLOR);
+		image3 = imread("ext3.jpg", CV_LOAD_IMAGE_COLOR);
+		Mat frame1 = getPanorama(image2, image1, true, detector, matcher);
+		mostrarImagen("Panorama", frame1, true);
+		Mat frame2 = getPanorama(image3, frame1, true, detector, matcher);
+		mostrarImagen("Panorama", frame2, true);
+		imwrite("fotito.jpg", frame2);
+	}
+	else{
+		Mat image1, image2, image3, image4, image5, image6;
+		image1 = imread("1.jpg", CV_LOAD_IMAGE_COLOR);
+		image2 = imread("2.jpg", CV_LOAD_IMAGE_COLOR);
+		image3 = imread("3.jpg", CV_LOAD_IMAGE_COLOR);
+//		image4 = imread("4.jpg", CV_LOAD_IMAGE_COLOR);
+//		image5 = imread("5.jpg", CV_LOAD_IMAGE_COLOR);
+//		image6 = imread("6.jpg", CV_LOAD_IMAGE_COLOR);
+
+		Mat frame1 = getPanorama(image1, image2, true, detector, matcher);
+		mostrarImagen("Panorama", frame1, true);
+		Mat frame2 = getPanorama(image3, frame1, true, detector, matcher);
+		mostrarImagen("Panorama", frame2, true);
+//		Mat frame3 = getPanorama(image4, frame2, true, detector, matcher);
+//		mostrarImagen("Panorama", frame3, true);
+//		Mat frame4 = getPanorama(image5, frame3, true, detector, matcher);
+//		mostrarImagen("Panorama", frame4, true);
+//		Mat frame5 = getPanorama(image6, frame4, true, detector, matcher);
+//		mostrarImagen("Panorama", frame5, true);
+//		imwrite("fotito.jpg", frame5);
+	}
 }
 
 /*
@@ -591,7 +693,8 @@ void panoramaPortatilTecla(int detector, int matcher) {
 
 		Mat imagen2 = frame.clone();
 
-		imagen1 = getPanorama(imagen2, imagen1, true, detector, matcher).clone();
+		imagen1 =
+				getPanorama(imagen2, imagen1, true, detector, matcher).clone();
 		mostrarImagen("Panorama", imagen1, false);
 		imwrite("fotito.jpg", imagen1);
 	}
@@ -613,7 +716,7 @@ void panoramaPortatilAutomatico(int detector, int matcher) {
 
 		mostrarImagen("Camara", frame2, false);
 
-		frame1 = getPanorama(frame2, frame1, true,detector, matcher).clone();
+		frame1 = getPanorama(frame2, frame1, true, detector, matcher).clone();
 
 		mostrarImagen("Panorama", frame1, false);
 		imwrite("fotito.jpg", frame1);
