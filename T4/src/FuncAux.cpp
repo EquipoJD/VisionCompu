@@ -649,21 +649,21 @@ void panoramaDisco(int detector, int matcher, int tipo) {
 		image1 = imread("1.jpg", CV_LOAD_IMAGE_COLOR);
 		image2 = imread("2.jpg", CV_LOAD_IMAGE_COLOR);
 		image3 = imread("3.jpg", CV_LOAD_IMAGE_COLOR);
-//		image4 = imread("4.jpg", CV_LOAD_IMAGE_COLOR);
-//		image5 = imread("5.jpg", CV_LOAD_IMAGE_COLOR);
-//		image6 = imread("6.jpg", CV_LOAD_IMAGE_COLOR);
+		image4 = imread("4.jpg", CV_LOAD_IMAGE_COLOR);
+		image5 = imread("5.jpg", CV_LOAD_IMAGE_COLOR);
+		image6 = imread("6.jpg", CV_LOAD_IMAGE_COLOR);
 
 		Mat frame1 = getPanorama(image1, image2, true, detector, matcher);
 		mostrarImagen("Panorama", frame1, true);
 		Mat frame2 = getPanorama(image3, frame1, true, detector, matcher);
 		mostrarImagen("Panorama", frame2, true);
-//		Mat frame3 = getPanorama(image4, frame2, true, detector, matcher);
-//		mostrarImagen("Panorama", frame3, true);
-//		Mat frame4 = getPanorama(image5, frame3, true, detector, matcher);
-//		mostrarImagen("Panorama", frame4, true);
-//		Mat frame5 = getPanorama(image6, frame4, true, detector, matcher);
-//		mostrarImagen("Panorama", frame5, true);
-//		imwrite("fotito.jpg", frame5);
+		Mat frame3 = getPanorama(image4, frame2, true, detector, matcher);
+		mostrarImagen("Panorama", frame3, true);
+		Mat frame4 = getPanorama(image5, frame3, true, detector, matcher);
+		mostrarImagen("Panorama", frame4, true);
+		Mat frame5 = getPanorama(image6, frame4, true, detector, matcher);
+		mostrarImagen("Panorama", frame5, true);
+		imwrite("fotito.jpg", frame5);
 	}
 }
 

@@ -56,15 +56,15 @@ int main() {
 	//0 = SURF
 	//1 = SIFT
 	//2 = ORB
-	int tipoDetector = 1;
+	int tipoDetector = 0;
 
 	//0 = Brute force
 	//1 = Flann Based
-	int tipoMatcher = 1;
+	int tipoMatcher = 0;
 
 	//0 = objeto
 	//1 = escena
-	int objEsc = 1;
+	int objEsc = 0;
 
 	funcionPrincipal(tipoPanorama,tipoDetector,tipoMatcher,objEsc);
 	return 0;
